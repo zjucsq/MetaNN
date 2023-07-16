@@ -4,20 +4,24 @@
 #include <MetaNN/facilities/traits.h>
 #include <cassert>
 
+// Maintain the memory allocated by Allocator
 namespace MetaNN
 {
 template <typename TElem, typename TDevice>
 class ContinuousMemory
 {
+    // const and ref are meanless in dl framework
     static_assert(std::is_same<RemConstRef<TElem>, TElem>::value);
     using ElementType = TElem;
     
 public:
+    // Initialize with memory size p_size
     explicit ContinuousMemory(size_t p_size)
         : m_mem(Allocator<TDevice>::template Allocate<ElementType>(p_size))
         , m_size(p_size)
     {}
 
+    // Construct a new object which only contains part of origin object
     ContinuousMemory Shift(size_t pos) const
     {
         assert(pos < m_size);

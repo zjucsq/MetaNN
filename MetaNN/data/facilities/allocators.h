@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <deque>
 
+// Simple memory pool
 namespace MetaNN
 {
 template <typename TDevice>
@@ -17,6 +18,7 @@ struct Allocator<DeviceTags::CPU>
 private:
     struct AllocHelper
     {
+        // Using memBuffer to store buffer
         std::unordered_map<size_t, std::deque<void*> > memBuffer;
         ~AllocHelper()
         {
@@ -33,6 +35,7 @@ private:
         }
     };
 
+    // Do not delete directly, store the memory in memBuffer
     struct DesImpl
     {
         DesImpl(std::deque<void*>& p_refPool)
@@ -56,7 +59,8 @@ public:
             return nullptr;
         }
         p_elemSize *= sizeof(T);
-        
+    
+        // The memory allocated is always a multiple of 1024
         if (p_elemSize & 0x3ff)
         {
             p_elemSize = ((p_elemSize >> 10) + 1) << 10;
@@ -64,6 +68,7 @@ public:
 
         std::lock_guard<std::mutex> guard(m_mutex);
 
+        // Function Allocate returns a shared_ptr, which has the second parameter to control the behavior of the destructor
         static AllocHelper allocateHelper;
         auto& slot = allocateHelper.memBuffer[p_elemSize];
         if (slot.empty())
